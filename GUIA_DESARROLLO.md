@@ -50,6 +50,26 @@ Se ha añadido un archivo `.gitignore` estándar para proyectos .NET para evitar
 
 ---
 
+## 🛠 CRUD en Memoria (Productos)
+
+Se ha implementado un controlador `ProductosController` que simula una base de datos utilizando una **lista estática**. Esto permite probar la API sin necesidad de configurar una base de datos real.
+
+### 1. El Controlador (`Controllers/ProductosController.cs`)
+El controlador utiliza los verbos HTTP estándar para realizar operaciones sobre la lista de productos:
+
+*   **GET `/api/productos`**: Devuelve la lista completa de productos.
+*   **GET `/api/productos/{id}`**: Busca un producto específico por su ID.
+*   **POST `/api/productos`**: Añade un nuevo producto a la lista (devuelve `"creado"`).
+*   **PUT `/api/productos/{id}`**: Actualiza los datos de un producto existente (devuelve `"actualizado"`).
+*   **DELETE `/api/productos/{id}`**: Elimina un producto de la lista (devuelve `"borrado"`).
+
+### 2. Conceptos Clave
+*   **`private static List<Producto> _productos`**: Al ser una variable `static`, la información se mantiene mientras la aplicación esté ejecutándose (se pierde al reiniciar).
+*   **`[FromBody]`**: Indica que los datos del producto vienen en el cuerpo de la petición JSON.
+*   **`ActionResult<T>`**: Permite devolver tanto los datos como códigos de estado HTTP (200 OK, 404 Not Found, etc.).
+
+---
+
 ## 📝 Notas Adicionales
 *   **TargetFramework:** `net10.0`
 *   **OpenAPI Nativa:** Este proyecto utiliza `Microsoft.AspNetCore.OpenApi` junto con `Swashbuckle` para la interfaz visual.
