@@ -50,6 +50,7 @@ mono_crash.*
 *.azureServicePackages
 
 # Others
+.env
 ClientBin/
 ~$*
 *~

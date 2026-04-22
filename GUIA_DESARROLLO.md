@@ -1,75 +1,107 @@
-# 🛠 Guía de Desarrollo del Proyecto
+# 📘 Manual de Configuración: Web API .NET
 
-Este archivo sirve como referencia rápida para la configuración y mantenimiento de este proyecto Web API de .NET.
-
----
-
-## 🔍 Configuración de Swagger (UI)
-
-Para habilitar la interfaz visual de Swagger en proyectos .NET 9/10 que usan la nueva librería OpenAPI:
-
-### 1. Instalar el Paquete NuGet
-Ejecuta el siguiente comando en la terminal:
-```bash
-dotnet add package Swashbuckle.AspNetCore
-```
-
-### 2. Configurar `Program.cs`
-Añade los servicios y el middleware correspondientes:
-
-```csharp
-// 1. Agregar el servicio generador de Swagger
-builder.Services.AddSwaggerGen();
-
-var app = builder.Build();
-
-// 2. Habilitar Swagger solo en entorno de Desarrollo
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();   // Genera el archivo JSON de la API
-    app.UseSwaggerUI(); // Genera la interfaz visual (UI)
-}
-```
-
-### 3. Configurar el Inicio Automático
-En el archivo `Properties/launchSettings.json`, modifica cada perfil (`http` y `https`) con estas propiedades:
-```json
-"launchBrowser": true,
-"launchUrl": "swagger",
-```
+Este manual explica detalladamente cómo configurar las funcionalidades esenciales de una Web API profesional. Úsalo como guía paso a paso para tus proyectos.
 
 ---
 
-## 📂 Control de Versiones (Git)
+## 1. Configuración de Documentación (Swagger)
+Swagger permite visualizar y probar los endpoints de tu API de forma interactiva.
 
-### Configuración de `.gitignore`
-Se ha añadido un archivo `.gitignore` estándar para proyectos .NET para evitar subir archivos innecesarios al repositorio:
-*   `bin/` y `obj/` (Binarios y archivos temporales de compilación).
-*   `.vs/` y `.vscode/` (Configuraciones de IDE).
-*   `appsettings.Development.json` (Configuraciones locales).
-
----
-
-## 🛠 CRUD en Memoria (Productos)
-
-Se ha implementado un controlador `ProductosController` que simula una base de datos utilizando una **lista estática**. Esto permite probar la API sin necesidad de configurar una base de datos real.
-
-### 1. El Controlador (`Controllers/ProductosController.cs`)
-El controlador utiliza los verbos HTTP estándar para realizar operaciones sobre la lista de productos:
-
-*   **GET `/api/productos`**: Devuelve la lista completa de productos.
-*   **GET `/api/productos/{id}`**: Busca un producto específico por su ID.
-*   **POST `/api/productos`**: Añade un nuevo producto a la lista (devuelve `"creado"`).
-*   **PUT `/api/productos/{id}`**: Actualiza los datos de un producto existente (devuelve `"actualizado"`).
-*   **DELETE `/api/productos/{id}`**: Elimina un producto de la lista (devuelve `"borrado"`).
-
-### 2. Conceptos Clave
-*   **`private static List<Producto> _productos`**: Al ser una variable `static`, la información se mantiene mientras la aplicación esté ejecutándose (se pierde al reiniciar).
-*   **`[FromBody]`**: Indica que los datos del producto vienen en el cuerpo de la petición JSON.
-*   **`ActionResult<T>`**: Permite devolver tanto los datos como códigos de estado HTTP (200 OK, 404 Not Found, etc.).
+### Paso a paso:
+1.  **Instalar el paquete**:
+    ```bash
+    dotnet add package Swashbuckle.AspNetCore
+    ```
+2.  **Registrar el servicio** en `Program.cs`:
+    ```csharp
+    builder.Services.AddSwaggerGen();
+    ```
+3.  **Habilitar la interfaz** en el pipeline (dentro de `if (app.Environment.IsDevelopment())`):
+    ```csharp
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    ```
+4.  **Auto-inicio**: En `Properties/launchSettings.json`, busca los perfiles "http" y "https" y añade:
+    ```json
+    "launchBrowser": true,
+    "launchUrl": "swagger"
+    ```
 
 ---
 
-## 📝 Notas Adicionales
-*   **TargetFramework:** `net10.0`
-*   **OpenAPI Nativa:** Este proyecto utiliza `Microsoft.AspNetCore.OpenApi` junto con `Swashbuckle` para la interfaz visual.
+## 2. Estructura de Datos (Modelos y Controladores)
+Define cómo se ven tus datos y cómo se accede a ellos.
+
+### Paso a paso:
+1.  **Crear el Modelo**: Crea una clase en la carpeta `Models/` (ej: `Producto.cs`). Define sus propiedades (`Id`, `Nombre`, `Precio`).
+2.  **Crear el Controlador**: Crea una clase en `Controllers/` que herede de `ControllerBase` y tenga el atributo `[ApiController]`.
+3.  **CRUD en Memoria**: Para pruebas rápidas sin base de datos, declara una lista estática dentro del controlador:
+    ```csharp
+    private static List<Producto> _productos = new List<Producto>();
+    ```
+
+---
+
+## 3. Conexión a Base de Datos (PostgreSQL + EF Core)
+Uso de Entity Framework Core para persistencia real de datos.
+
+### Paso a paso:
+1.  **Instalar drivers de PostgreSQL**:
+    ```bash
+    dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
+    dotnet add package Microsoft.EntityFrameworkCore.Design
+    ```
+2.  **Crear el Contexto (`DbContext`)**: Crea una carpeta `Data/` y una clase `ApplicationDbContext.cs`. Debe heredar de `DbContext` y contener el `DbSet<TuModelo>`.
+3.  **Configurar en `Program.cs`**:
+    ```csharp
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(cadenaDeConexion));
+    ```
+
+---
+
+## 4. Seguridad con Variables de Entorno (.env)
+Protege tus contraseñas y secretos para que no se filtren en repositorios públicos.
+
+### Paso a paso:
+1.  **Instalar DotNetEnv**:
+    ```bash
+    dotnet add package DotNetEnv
+    ```
+2.  **Crear el archivo `.env`**: En la raíz del proyecto, crea un archivo llamado `.env` y guarda tus secretos:
+    ```env
+    DB_CONNECTION_STRING="Host=servidor;Database=db;Username=user;Password=pass"
+    ```
+3.  **Ignorar en Git**: Abre `.gitignore` y añade una línea con `.env` al final.
+4.  **Cargar variables**: En la primera línea de `Program.cs`, añade:
+    ```csharp
+    DotNetEnv.Env.Load();
+    var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+    ```
+
+---
+
+## 5. Gestión de Tablas (Migraciones)
+Cómo sincronizar tus clases de C# con las tablas de SQL.
+
+### Paso a paso:
+1.  **Instalar herramienta EF** (solo una vez en tu PC):
+    ```bash
+    dotnet tool install --global dotnet-ef
+    ```
+2.  **Crear una migración** (genera el código SQL necesario):
+    ```bash
+    dotnet ef migrations add NombreDeLaMigracion -o Data/Migrations
+    ```
+3.  **Aplicar a la Base de Datos** (ejecuta el SQL):
+    ```bash
+    dotnet ef database update
+    ```
+
+---
+
+## 📂 Glosario de Archivos Importantes
+*   **`Program.cs`**: El corazón de la app donde se configuran todos los servicios.
+*   **`appsettings.json`**: Configuraciones generales (no sensibles).
+*   **`.gitignore`**: Lista de archivos que Git debe ignorar (como `obj/`, `bin/` y `.env`).
+*   **`.env`**: Archivo local secreto con tus contraseñas de base de datos.
