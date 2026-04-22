@@ -208,6 +208,38 @@ Para conectar diferentes modelos (ej: un `Producto` pertenece a una `Categoria`)
 
 ---
 
+## 10. Servicios y Lógica de Negocio (Service Pattern)
+Para mantener el controlador limpio, movemos toda la lógica de datos y negocio a clases de servicio.
+
+### Implementación de Filtrado (Patrón Queryable)
+Para implementar filtros eficientes sin sobrecargar la base de datos, usamos `IQueryable`:
+
+1.  **Conversión a Queryable**: Al usar `_context.Productos.AsQueryable()`, estamos creando una "consulta pendiente". Nada se envía a la base de datos todavía.
+2.  **Encadenamiento dinámico**: Si el usuario proporciona un filtro, añadimos una condición `Where()` a la consulta existente.
+    ```csharp
+    var query = _context.Productos.AsQueryable();
+    if (!string.IsNullOrWhiteSpace(nombre)) {
+        query = query.Where(p => p.Nombre.Contains(nombre));
+    }
+    ```
+3.  **Ejecución**: La consulta real (SQL) se construye y ejecuta en Supabase solo cuando llamamos a `ToListAsync()`. Esto significa que si el usuario pidió filtrar por nombre, **la base de datos solo devolverá los productos que coinciden**, lo cual es extremadamente rápido y eficiente.
+
+*Nota: Siempre aplica los filtros ANTES del `.Skip()` y `.Take()` para asegurarte de paginar sobre los datos ya filtrados.*
+
+### Paso a paso para crear un nuevo servicio:
+1.  **Crear la Interface (`Services/I[Entidad]Service.cs`)**: Define los métodos necesarios (`GetAsync`, `CreateAsync`, etc.).
+2.  **Crear la Implementación (`Services/[Entidad]Service.cs`)**: Sigue los puntos explicados arriba.
+3.  **Registrar en `Program.cs`**:
+    ```csharp
+    builder.Services.AddScoped<IProductoService, ProductoService>();
+    ```
+4.  **Inyectar en el Controlador**:
+    Sustituye el acceso directo al `DbContext` por tu servicio.
+
+*Nota: Es obligatorio crear tanto la Interface como la Clase de implementación antes de intentar registrarlas en `Program.cs`.*
+
+---
+
 ## 🛠 Solución de Problemas Comunes
 *   **Archivo bloqueado al compilar**: Si recibes un error diciendo que no se puede acceder a `WebApiProducto.exe`, es porque la aplicación se está ejecutando. Debes detenerla (cerrar la terminal de ejecución o el proceso) antes de aplicar migraciones.
 *   **Error de conexión**: Asegúrate de que el archivo `.env` tenga la contraseña correcta de Supabase y que no tenga espacios innecesarios.
