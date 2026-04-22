@@ -81,22 +81,36 @@ Protege tus contraseñas y secretos para que no se filtren en repositorios públ
 
 ---
 
-## 5. Gestión de Tablas (Migraciones)
-Cómo sincronizar tus clases de C# con las tablas de SQL.
+## 5. Gestión de Tablas (Migraciones con EF Core)
+Las migraciones son el mecanismo para sincronizar tus clases de C# con las tablas físicas de SQL en Supabase.
 
 ### Paso a paso:
-1.  **Instalar herramienta EF** (solo una vez en tu PC):
+
+1.  **Instalar la herramienta CLI de Entity Framework**:
+    Es necesario instalar esta herramienta de forma global en tu máquina (solo se hace una vez):
     ```bash
     dotnet tool install --global dotnet-ef
     ```
-2.  **Crear una migración** (genera el código SQL necesario):
+
+2.  **Crear una Migración**:
+    Cada vez que cambies algo en tu modelo (añadir un campo, crear una tabla), genera un nuevo archivo de migración:
     ```bash
-    dotnet ef migrations add NombreDeLaMigracion -o Data/Migrations
+    dotnet ef migrations add InitialCreate -o Data/Migrations
     ```
-3.  **Aplicar a la Base de Datos** (ejecuta el SQL):
+    *   `InitialCreate`: Es el nombre de la migración.
+    *   `-o Data/Migrations`: Indica que los archivos se guarden en esa carpeta.
+
+3.  **Aplicar cambios a la Base de Datos**:
+    Este comando toma las migraciones pendientes y ejecuta el código SQL en tu servidor remoto de Supabase:
     ```bash
     dotnet ef database update
     ```
+
+---
+
+## 🛠 Solución de Problemas Comunes
+*   **Archivo bloqueado al compilar**: Si recibes un error diciendo que no se puede acceder a `WebApiProducto.exe`, es porque la aplicación se está ejecutando. Debes detenerla (cerrar la terminal de ejecución o el proceso) antes de aplicar migraciones.
+*   **Error de conexión**: Asegúrate de que el archivo `.env` tenga la contraseña correcta de Supabase y que no tenga espacios innecesarios.
 
 ---
 
