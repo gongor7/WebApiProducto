@@ -18,6 +18,8 @@ x86/
 bld/
 [Bb]in/
 [Oo]bj/
+**/bin/
+**/obj/
 log/
 logs/
 

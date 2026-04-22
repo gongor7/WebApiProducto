@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using WebApiProducto.Data;
 using WebApiProducto.Models;
 
 namespace WebApiProducto.Controllers;
@@ -7,38 +9,43 @@ namespace WebApiProducto.Controllers;
 [Route("api/[controller]")]
 public class ProductosController : ControllerBase
 {
-    // Lista estática en memoria para simular la base de datos
-    private static List<Producto> _productos = new List<Producto>();
+    private readonly ApplicationDbContext _context;
+
+    public ProductosController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
 
     // GET: api/productos
     [HttpGet]
-    public ActionResult<IEnumerable<Producto>> Get()
+    public async Task<ActionResult<IEnumerable<Producto>>> Get()
     {
-        return Ok(_productos);
+        return await _context.Productos.ToListAsync();
     }
 
     // GET: api/productos/5
     [HttpGet("{id}")]
-    public ActionResult<Producto> Get(int id)
+    public async Task<ActionResult<Producto>> Get(int id)
     {
-        var producto = _productos.FirstOrDefault(p => p.Id == id);
+        var producto = await _context.Productos.FindAsync(id);
         if (producto == null) return NotFound("Producto no encontrado");
-        return Ok(producto);
+        return producto;
     }
 
     // POST: api/productos
     [HttpPost]
-    public ActionResult<string> Post([FromBody] Producto producto)
+    public async Task<ActionResult<string>> Post([FromBody] Producto producto)
     {
-        _productos.Add(producto);
+        _context.Productos.Add(producto);
+        await _context.SaveChangesAsync();
         return Ok("creado");
     }
 
     // PUT: api/productos/5
     [HttpPut("{id}")]
-    public ActionResult<string> Put(int id, [FromBody] Producto producto)
+    public async Task<ActionResult<string>> Put(int id, [FromBody] Producto producto)
     {
-        var existing = _productos.FirstOrDefault(p => p.Id == id);
+        var existing = await _context.Productos.FindAsync(id);
         if (existing == null) return NotFound("Producto no encontrado");
         
         existing.Nombre = producto.Nombre;
@@ -46,17 +53,19 @@ public class ProductosController : ControllerBase
         existing.Descripcion = producto.Descripcion;
         existing.Activo = producto.Activo;
         
+        await _context.SaveChangesAsync();
         return Ok("actualizado");
     }
 
     // DELETE: api/productos/5
     [HttpDelete("{id}")]
-    public ActionResult<string> Delete(int id)
+    public async Task<ActionResult<string>> Delete(int id)
     {
-        var producto = _productos.FirstOrDefault(p => p.Id == id);
+        var producto = await _context.Productos.FindAsync(id);
         if (producto == null) return NotFound("Producto no encontrado");
         
-        _productos.Remove(producto);
+        _context.Productos.Remove(producto);
+        await _context.SaveChangesAsync();
         return Ok("borrado");
     }
 }
