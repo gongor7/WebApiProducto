@@ -126,6 +126,43 @@ Para asegurar que la información recibida es correcta antes de guardarla en la 
 
 ---
 
+## 7. Arquitectura de DTOs (Data Transfer Objects)
+Para separar el modelo de la base de datos de los datos que viajan por la red.
+
+### ¿Por qué usarlos?
+*   **Seguridad**: El cliente solo envía y recibe lo que tú permites (evita ataques como *Mass Assignment*).
+*   **Mantenimiento**: Puedes cambiar la base de datos sin afectar a los usuarios de la API.
+
+### Implementación en el Controlador:
+El controlador ahora actúa como un "traductor" entre el mundo exterior (DTOs) y el mundo interior (Modelos de Base de Datos).
+
+#### 1. Recepción de Datos (`POST`/`PUT`)
+El controlador recibe un `ProductoCreateDto`. No usamos el modelo `Producto` directamente para evitar que el usuario intente manipular campos internos como el `Id` o la `FechaDeAlta`.
+```csharp
+public async Task<ActionResult> Post([FromBody] ProductoCreateDto dto)
+{
+    // Mapeo manual: Creamos el modelo a partir del DTO
+    var producto = new Producto { Nombre = dto.Nombre, Precio = dto.Precio ... };
+    _context.Productos.Add(producto);
+}
+```
+
+#### 2. Envío de Datos (`GET`)
+Nunca devolvemos el modelo de la base de datos directamente. Lo convertimos a un `ProductoReadDto`.
+```csharp
+public async Task<ActionResult<IEnumerable<ProductoReadDto>>> Get()
+{
+    var productos = await _context.Productos.ToListAsync();
+    // Transformación: Proyectamos cada producto a su versión DTO
+    return Ok(productos.Select(p => new ProductoReadDto { ... }));
+}
+```
+
+### ¿Cómo leer los errores de validación?
+Al usar DTOs con `DataAnnotations` y el atributo `[ApiController]`, .NET genera automáticamente una respuesta **400 Bad Request** si los datos son inválidos. El formato sigue el estándar **RFC 7807 (Problem Details)**, que desglosa exactamente qué campo falló y por qué.
+
+---
+
 ## 🛠 Solución de Problemas Comunes
 *   **Archivo bloqueado al compilar**: Si recibes un error diciendo que no se puede acceder a `WebApiProducto.exe`, es porque la aplicación se está ejecutando. Debes detenerla (cerrar la terminal de ejecución o el proceso) antes de aplicar migraciones.
 *   **Error de conexión**: Asegúrate de que el archivo `.env` tenga la contraseña correcta de Supabase y que no tenga espacios innecesarios.
