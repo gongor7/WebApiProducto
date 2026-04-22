@@ -58,6 +58,20 @@ public class ProductoService : IProductoService
         return true;
     }
 
+    public async Task<IEnumerable<ProductoReadDto>> SearchAsync(string query)
+    {
+        return await _context.Productos
+            .Include(p => p.Categoria)
+            .Where(p => p.Nombre.ToLower() == query.ToLower() || 
+                        p.Descripcion.ToLower() == query.ToLower())
+            .Select(p => new ProductoReadDto {
+                Id = p.Id, Nombre = p.Nombre, Descripcion = p.Descripcion, Precio = p.Precio,
+                CategoriaNombre = p.Categoria != null ? p.Categoria.Nombre : "Sin Categoría",
+                FechaDeAlta = p.FechaDeAlta, Activo = p.Activo
+            })
+            .ToListAsync();
+    }
+
     public async Task<bool> DeleteAsync(int id)
     {
         var p = await _context.Productos.FindAsync(id);
