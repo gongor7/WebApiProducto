@@ -163,6 +163,24 @@ Al usar DTOs con `DataAnnotations` y el atributo `[ApiController]`, .NET genera 
 
 ---
 
+## 8. Paginado y Rendimiento
+Para manejar grandes volúmenes de datos de forma eficiente sin saturar el servidor o el cliente.
+
+### Conceptos Clave:
+*   **`.Skip(n)`**: Salta los primeros `n` registros de la consulta.
+*   **`.Take(m)`**: Toma solo los siguientes `m` registros.
+*   **Query Parameters**: Usamos `pageNumber` y `pageSize` en la URL (ej: `api/productos?pageNumber=1&pageSize=10`).
+
+### Paso a paso:
+1.  **Crear `PagedResponse<T>`**: Un DTO genérico que envuelva los datos y añada metadatos (página actual, total de registros, total de páginas).
+2.  **Implementar lógica en el Controlador**:
+    *   Usa `[FromQuery]` para recibir los parámetros.
+    *   Obtén el conteo total con `CountAsync()`.
+    *   Aplica `OrderBy()`, `Skip()` y `Take()` antes del `ToListAsync()`.
+3.  **Seguridad**: Limita siempre el `pageSize` máximo (ej: no permitir más de 50 registros por página) para evitar ataques que intenten descargar toda tu base de datos de una vez.
+
+---
+
 ## 🛠 Solución de Problemas Comunes
 *   **Archivo bloqueado al compilar**: Si recibes un error diciendo que no se puede acceder a `WebApiProducto.exe`, es porque la aplicación se está ejecutando. Debes detenerla (cerrar la terminal de ejecución o el proceso) antes de aplicar migraciones.
 *   **Error de conexión**: Asegúrate de que el archivo `.env` tenga la contraseña correcta de Supabase y que no tenga espacios innecesarios.

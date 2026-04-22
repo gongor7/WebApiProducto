@@ -17,14 +17,25 @@ public class ProductosController : ControllerBase
         _context = context;
     }
 
-    // GET: api/productos
+    // GET: api/productos?pageNumber=1&pageSize=10
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ProductoReadDto>>> Get()
+    public async Task<ActionResult<PagedResponse<ProductoReadDto>>> Get(
+        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageSize = 10)
     {
-        var productos = await _context.Productos.ToListAsync();
+        // Validación Senior de parámetros
+        if (pageNumber < 1) pageNumber = 1;
+        if (pageSize < 1 || pageSize > 50) pageSize = 10;
+
+        var totalRecords = await _context.Productos.CountAsync();
         
-        // Convertimos a DTO de salida
-        return Ok(productos.Select(p => new ProductoReadDto 
+        var productos = await _context.Productos
+            .OrderBy(p => p.Id) // Importante ordenar siempre antes de paginar
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        
+        var dataDto = productos.Select(p => new ProductoReadDto 
         {
             Id = p.Id,
             Nombre = p.Nombre,
@@ -32,7 +43,9 @@ public class ProductosController : ControllerBase
             Precio = p.Precio,
             FechaDeAlta = p.FechaDeAlta,
             Activo = p.Activo
-        }));
+        });
+
+        return Ok(new PagedResponse<ProductoReadDto>(dataDto, pageNumber, pageSize, totalRecords));
     }
 
     // GET: api/productos/5
