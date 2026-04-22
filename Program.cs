@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WebApiProducto.Data;
+using WebApiProducto.Services;
 using DotNetEnv;
 
 // Cargar variables de entorno desde .env
@@ -13,6 +14,8 @@ var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<IProductoService, ProductoService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
