@@ -181,6 +181,33 @@ Para manejar grandes volúmenes de datos de forma eficiente sin saturar el servi
 
 ---
 
+## 9. Relaciones entre Entidades (Relaciones 1:N)
+Para conectar diferentes modelos (ej: un `Producto` pertenece a una `Categoria`).
+
+### Paso a paso:
+1.  **Crear el modelo padre**: Define una clase con una `ICollection` de los modelos hijos.
+    ```csharp
+    public class Categoria {
+        public int Id { get; set; }
+        public ICollection<Producto> Productos { get; set; } = new List<Producto>();
+    }
+    ```
+2.  **Crear el modelo hijo con Foreign Key**: En el modelo hijo, añade el ID del padre y la propiedad de navegación.
+    ```csharp
+    public int CategoriaId { get; set; }
+    public Categoria? Categoria { get; set; }
+    ```
+3.  **Actualizar DbContext**: Añade el `DbSet` del nuevo modelo.
+4.  **Uso de `.Include()`**: En los métodos `GET` del controlador, usa `.Include(p => p.Categoria)` para traer la información relacionada de la base de datos (Eager Loading).
+5.  **Migraciones**: Cada vez que añadas una relación, debes generar una nueva migración:
+    ```bash
+    dotnet ef migrations add NombreRelacion
+    dotnet ef database update
+    ```
+    *Nota: Si ya tienes datos, asegúrate de limpiarlos o asignar categorías válidas antes de aplicar la restricción de llave foránea.*
+
+---
+
 ## 🛠 Solución de Problemas Comunes
 *   **Archivo bloqueado al compilar**: Si recibes un error diciendo que no se puede acceder a `WebApiProducto.exe`, es porque la aplicación se está ejecutando. Debes detenerla (cerrar la terminal de ejecución o el proceso) antes de aplicar migraciones.
 *   **Error de conexión**: Asegúrate de que el archivo `.env` tenga la contraseña correcta de Supabase y que no tenga espacios innecesarios.

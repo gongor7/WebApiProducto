@@ -15,6 +15,9 @@ public class ProductoCreateDto
     [Range(0.01, 1000000, ErrorMessage = "El precio debe ser un valor positivo.")]
     public decimal Precio { get; set; }
 
+    [Required(ErrorMessage = "La categoría es obligatoria.")]
+    public int CategoriaId { get; set; }
+
     public bool Activo { get; set; } = true;
 }
 
@@ -24,6 +27,7 @@ public class ProductoReadDto
     public string Nombre { get; set; } = string.Empty;
     public string Descripcion { get; set; } = string.Empty;
     public decimal Precio { get; set; }
+    public string CategoriaNombre { get; set; } = string.Empty;
     public DateTime FechaDeAlta { get; set; }
     public bool Activo { get; set; }
 }

@@ -24,4 +24,10 @@ public class Producto
     public DateTime FechaDeAlta { get; set; } = DateTime.UtcNow;
 
     public bool Activo { get; set; } = true;
+
+    // Relación con Categoria
+    [Required(ErrorMessage = "La categoría es obligatoria.")]
+    public int CategoriaId { get; set; }
+    
+    public Categoria? Categoria { get; set; }
 }

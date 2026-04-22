@@ -23,14 +23,14 @@ public class ProductosController : ControllerBase
         [FromQuery] int pageNumber = 1, 
         [FromQuery] int pageSize = 10)
     {
-        // Validación Senior de parámetros
         if (pageNumber < 1) pageNumber = 1;
         if (pageSize < 1 || pageSize > 50) pageSize = 10;
 
         var totalRecords = await _context.Productos.CountAsync();
         
         var productos = await _context.Productos
-            .OrderBy(p => p.Id) // Importante ordenar siempre antes de paginar
+            .Include(p => p.Categoria) // Cargamos la Categoría relacionada
+            .OrderBy(p => p.Id)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -41,6 +41,7 @@ public class ProductosController : ControllerBase
             Nombre = p.Nombre,
             Descripcion = p.Descripcion,
             Precio = p.Precio,
+            CategoriaNombre = p.Categoria?.Nombre ?? "Sin Categoría",
             FechaDeAlta = p.FechaDeAlta,
             Activo = p.Activo
         });
@@ -48,11 +49,13 @@ public class ProductosController : ControllerBase
         return Ok(new PagedResponse<ProductoReadDto>(dataDto, pageNumber, pageSize, totalRecords));
     }
 
-    // GET: api/productos/5
     [HttpGet("{id}")]
     public async Task<ActionResult<ProductoReadDto>> Get(int id)
     {
-        var p = await _context.Productos.FindAsync(id);
+        var p = await _context.Productos
+            .Include(p => p.Categoria)
+            .FirstOrDefaultAsync(x => x.Id == id);
+
         if (p == null) return NotFound("Producto no encontrado");
 
         return Ok(new ProductoReadDto 
@@ -61,41 +64,43 @@ public class ProductosController : ControllerBase
             Nombre = p.Nombre,
             Descripcion = p.Descripcion,
             Precio = p.Precio,
+            CategoriaNombre = p.Categoria?.Nombre ?? "Sin Categoría",
             FechaDeAlta = p.FechaDeAlta,
             Activo = p.Activo
         });
     }
 
-    // POST: api/productos
     [HttpPost]
     public async Task<ActionResult<ProductoReadDto>> Post([FromBody] ProductoCreateDto dto)
     {
-        // Convertimos de DTO de entrada a Modelo de Base de Datos
         var producto = new Producto 
         {
             Nombre = dto.Nombre,
             Descripcion = dto.Descripcion,
             Precio = dto.Precio,
+            CategoriaId = dto.CategoriaId, // Asignamos la relación
             Activo = dto.Activo,
-            FechaDeAlta = DateTime.UtcNow // Valor interno del sistema
+            FechaDeAlta = DateTime.UtcNow
         };
 
         _context.Productos.Add(producto);
         await _context.SaveChangesAsync();
 
-        // Devolvemos el objeto creado en formato ReadDto
+        // Recargamos el producto para tener el nombre de la categoría en la respuesta
+        await _context.Entry(producto).Reference(x => x.Categoria).LoadAsync();
+
         return CreatedAtAction(nameof(Get), new { id = producto.Id }, new ProductoReadDto 
         {
             Id = producto.Id,
             Nombre = producto.Nombre,
             Descripcion = producto.Descripcion,
             Precio = producto.Precio,
+            CategoriaNombre = producto.Categoria?.Nombre ?? "Sin Categoría",
             FechaDeAlta = producto.FechaDeAlta,
             Activo = producto.Activo
         });
     }
 
-    // PUT: api/productos/5
     [HttpPut("{id}")]
     public async Task<ActionResult<string>> Put(int id, [FromBody] ProductoCreateDto dto)
     {
@@ -105,13 +110,13 @@ public class ProductosController : ControllerBase
         p.Nombre = dto.Nombre;
         p.Precio = dto.Precio;
         p.Descripcion = dto.Descripcion;
+        p.CategoriaId = dto.CategoriaId;
         p.Activo = dto.Activo;
         
         await _context.SaveChangesAsync();
         return Ok("actualizado");
     }
 
-    // DELETE: api/productos/5
     [HttpDelete("{id}")]
     public async Task<ActionResult<string>> Delete(int id)
     {
