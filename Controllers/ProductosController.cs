@@ -38,4 +38,8 @@ public class ProductosController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
         => await _service.DeleteAsync(id) ? Ok("borrado") : NotFound("Producto no encontrado");
+
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<ProductoReadDto>>> Search([FromQuery] string query)
+        => Ok(await _service.SearchAsync(query));
 }
