@@ -108,6 +108,24 @@ Las migraciones son el mecanismo para sincronizar tus clases de C# con las tabla
 
 ---
 
+## 6. Validaciones de Datos (Data Annotations)
+Para asegurar que la información recibida es correcta antes de guardarla en la base de datos.
+
+### Paso a paso:
+1.  **Añadir Atributos al Modelo**: En tu clase del modelo (ej: `Producto.cs`), usa los siguientes atributos sobre las propiedades:
+    *   `[Required]`: El campo no puede estar vacío.
+    *   `[StringLength(max, MinimumLength = min)]`: Limita los caracteres.
+    *   `[Range(min, max)]`: Valida valores numéricos.
+    *   `[EmailAddress]`, `[Phone]`, etc.: Para formatos específicos.
+2.  **Mensajes Personalizados**: Puedes añadir `ErrorMessage = "Tu mensaje"` dentro de los atributos.
+3.  **Actualizar DB**: Como estas anotaciones cambian la estructura de las tablas (ej: de `text` a `varchar(100)`), siempre debes crear una migración después:
+    ```bash
+    dotnet ef migrations add AddValidation
+    dotnet ef database update
+    ```
+
+---
+
 ## 🛠 Solución de Problemas Comunes
 *   **Archivo bloqueado al compilar**: Si recibes un error diciendo que no se puede acceder a `WebApiProducto.exe`, es porque la aplicación se está ejecutando. Debes detenerla (cerrar la terminal de ejecución o el proceso) antes de aplicar migraciones.
 *   **Error de conexión**: Asegúrate de que el archivo `.env` tenga la contraseña correcta de Supabase y que no tenga espacios innecesarios.
