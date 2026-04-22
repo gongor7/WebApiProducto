@@ -13,8 +13,12 @@ public class ProductosController : ControllerBase
     public ProductosController(IProductoService service) => _service = service;
 
     [HttpGet]
-    public async Task<ActionResult<PagedResponse<ProductoReadDto>>> Get([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string? nombre = null)
-        => Ok(await _service.GetProductosAsync(pageNumber, pageSize, nombre));
+    public async Task<ActionResult<PagedResponse<ProductoReadDto>>> Get(
+        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? nombre = null,
+        [FromQuery] string? descripcion = null)
+        => Ok(await _service.GetProductosAsync(pageNumber, pageSize, nombre, descripcion));
 
     [HttpGet("{id}")]
     public async Task<ActionResult<ProductoReadDto>> Get(int id)

@@ -11,10 +11,15 @@ public class ProductoService : IProductoService
 
     public ProductoService(ApplicationDbContext context) => _context = context;
 
-    public async Task<PagedResponse<ProductoReadDto>> GetProductosAsync(int pageNumber, int pageSize, string? nombre)
+    public async Task<PagedResponse<ProductoReadDto>> GetProductosAsync(int pageNumber, int pageSize, string? nombre, string? descripcion)
     {
         var query = _context.Productos.Include(p => p.Categoria).AsQueryable();
-        if (!string.IsNullOrWhiteSpace(nombre)) query = query.Where(p => p.Nombre.Contains(nombre));
+        
+        if (!string.IsNullOrWhiteSpace(nombre)) 
+            query = query.Where(p => p.Nombre.Contains(nombre));
+        
+        if (!string.IsNullOrWhiteSpace(descripcion)) 
+            query = query.Where(p => p.Descripcion.Contains(descripcion));
 
         var totalRecords = await query.CountAsync();
         var productos = await query.OrderBy(p => p.Id).Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();

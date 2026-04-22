@@ -4,7 +4,7 @@ namespace WebApiProducto.Services;
 
 public interface IProductoService
 {
-    Task<PagedResponse<ProductoReadDto>> GetProductosAsync(int pageNumber, int pageSize, string? nombre);
+    Task<PagedResponse<ProductoReadDto>> GetProductosAsync(int pageNumber, int pageSize, string? nombre, string? descripcion);
     Task<ProductoReadDto?> GetByIdAsync(int id);
     Task<ProductoReadDto> CreateAsync(ProductoCreateDto dto);
     Task<bool> UpdateAsync(int id, ProductoCreateDto dto);
